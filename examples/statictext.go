@@ -4,8 +4,7 @@ package main
 
 import (
 	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.4-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/golang/freetype"
 	"image"
 	"image/draw"
@@ -14,14 +13,6 @@ import (
 	"log"
 	"runtime"
 )
-
-var nextFrame = false
-
-func advanceFrame(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, md glfw.ModifierKey) {
-	if act == glfw.Press && key == glfw.KeySpace {
-		nextFrame = true
-	}
-}
 
 func main() {
 	runtime.LockOSThread()
@@ -37,7 +28,7 @@ func main() {
 	defer glad.Terminate()
 	// Enable VSync
 	glad.SwapInterval(1)
-	win.SetKeyCallback(advanceFrame)
+	bgCol := []float32{0.3, 0.3, 0.3, 1.0}
 
 	var (
 		program    glad.Program
@@ -109,21 +100,28 @@ func main() {
 	}
 
 	// Create a VAO and VBO for quad (Texture)
+	var bindPos uint32 = 0
 	vao = glad.NewVertexArrayObject()
-	vao.Bind()
 	vbo = glad.NewVertexBufferObject()
-	vbo.Bind()
 	vbo.BufferData32(quad, gl.STATIC_DRAW)
+	vao.VertexBuffer32(bindPos, vbo, 0, 7)
 	// Define attributes to draw the texture on quad
 	attrPos = program.GetAttributeLocation("pos")
-	attrPos.PointerFloat32(2, false, 7, 0)
+	vao.AttribFormat32(attrPos, 2, 0)
+	vao.AttribBinding(bindPos, attrPos)
+	//attrPos.PointerFloat32(2, false, 7, 0)
 	attrUV = program.GetAttributeLocation("uv")
-	attrUV.PointerFloat32(2, false, 7, 2)
+	vao.AttribFormat32(attrUV, 2, 2)
+	vao.AttribBinding(bindPos, attrUV)
+	//attrUV.PointerFloat32(2, false, 7, 2)
 	attrCol = program.GetAttributeLocation("col")
-	attrCol.PointerFloat32(3, false, 7, 4)
+	vao.AttribFormat32(attrCol, 3, 4)
+	vao.AttribBinding(bindPos, attrCol)
+	//attrCol.PointerFloat32(3, false, 7, 4)
 
 	// Create a framebuffer and a texture as render target
 	txr = glad.NewTexture()
+	txr.Storage2D(512, 256)
 	txr.Bind()
 	txr.Image2D(rgba)
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
@@ -131,14 +129,15 @@ func main() {
 	//fbo.Texture(gl.COLOR_ATTACHMENT0, txr)
 
 	gl.ClearColor(0.3, 0.3, 0.3, 1.0)
+	vao.Bind()
 	program.Use()
-	attrPos.Enable()
-	attrUV.Enable()
-	attrCol.Enable()
+	vao.EnableAttrib(attrPos)
+	vao.EnableAttrib(attrUV)
+	vao.EnableAttrib(attrCol)
 
 	for !win.ShouldClose() {
 		// Draw triangles with texture
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.ClearBufferfv(gl.COLOR, 0, &bgCol[0])
 		gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 4)
 		win.SwapBuffers()
 		glad.PollEvents()

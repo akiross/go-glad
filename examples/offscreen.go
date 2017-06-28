@@ -4,7 +4,7 @@ package main
 
 import (
 	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"log"
 	"runtime"
@@ -98,42 +98,52 @@ func main() {
 		0.0, 0.9, 1.0, 1.0,
 	}
 
+	var (
+		trisBind uint32 = 0
+		quadBind uint32 = 1
+	)
+
 	// Create a VAO and VBO for triangles (Color)
 	vaoC = glad.NewVertexArrayObject()
 	vboC = glad.NewVertexBufferObject()
-	unbind = glad.BlockBind(vaoC, vboC)
 	vboC.BufferData32(tris, gl.STATIC_DRAW) // Fill buffer with data
+	vaoC.VertexBuffer32(trisBind, vboC, 0, 5)
+
 	// Define attributes to draw triangles
 	attrPosC = programCol.GetAttributeLocation("pos")
-	attrPosC.PointerFloat32(2, false, 5, 0)
+	vaoC.AttribFormat32(attrPosC, 2, 0)
+	vaoC.AttribBinding(trisBind, attrPosC)
+
 	attrCol = programCol.GetAttributeLocation("col")
-	attrCol.PointerFloat32(3, false, 5, 2)
-	unbind()
+	vaoC.AttribFormat32(attrCol, 3, 2)
+	vaoC.AttribBinding(trisBind, attrCol)
 
 	// Create a VAO and VBO for quad (Texture)
 	vaoT = glad.NewVertexArrayObject()
 	vboT = glad.NewVertexBufferObject()
-	unbind = glad.BlockBind(vaoT, vboT)
 	vboT.BufferData32(quad, gl.STATIC_DRAW)
+	vaoT.VertexBuffer32(quadBind, vboT, 0, 4)
+
 	// Define attributes to draw the texture on quad
 	attrPosT = programTxr.GetAttributeLocation("pos")
-	attrPosT.PointerFloat32(2, false, 4, 0)
+	vaoT.AttribFormat32(attrPosT, 2, 0)
+	vaoT.AttribBinding(quadBind, attrPosT)
+
 	attrUV = programTxr.GetAttributeLocation("uv")
-	attrUV.PointerFloat32(2, false, 4, 2)
-	vaoT.Unbind()
+	vaoT.AttribFormat32(attrUV, 2, 2)
+	vaoT.AttribBinding(quadBind, attrUV)
 
 	// Create a framebuffer and a texture as render target
 	fbo = glad.NewFramebuffer()
 	txr = glad.NewTexture()
-	unbind = glad.BlockBind(fbo, txr)
-	txr.Empty2D(win.GetSize())
+	txr.Storage2D(win.GetSize())
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
+	txr.Bind()
 	// Attach texture to target
 	fbo.Texture(gl.COLOR_ATTACHMENT0, txr)
-	unbind()
 
 	// Draw onto texture the triangles
-	unbind = glad.BlockBind(fbo, vaoC) //, vboC)
+	unbind = glad.BlockBind(fbo, vaoC)
 	programCol.Use()
 	disable := glad.BlockEnable(attrPosC, attrCol)
 
@@ -149,7 +159,7 @@ func main() {
 
 	gl.ClearColor(0.3, 0.3, 0.3, 1.0)
 	vaoT.Bind()
-	txr.Bind()
+	//txr.Bind()
 	programTxr.Use()
 	attrPosT.Enable()
 	attrUV.Enable()

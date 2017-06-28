@@ -4,7 +4,7 @@ package main
 
 import (
 	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 	"image"
 	"image/color"
 	"log"
@@ -26,7 +26,7 @@ func main() {
 	// Enable VSync
 	glad.SwapInterval(1)
 
-	gl.ClearColor(0.3, 0.3, 0.3, 1.0)
+	bgCol := []float32{0.3, 0.3, 0.3, 1.0}
 
 	vertShader := glad.NewShader(vertexShaderSource, gl.VERTEX_SHADER)
 	fragShader := glad.NewShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
@@ -54,30 +54,36 @@ func main() {
 		}
 	}
 
+	var bindPos uint32 = 0
 	vao := glad.NewVertexArrayObject()
-	vao.Bind()
-
 	vbo := glad.NewVertexBufferObject()
-	vbo.Bind()
 	vbo.BufferData32(vertPosAndUV, gl.STATIC_DRAW)
+	vao.VertexBuffer32(bindPos, vbo, 0, 4)
 
 	txr := glad.NewTexture()
+	txr.Storage2D(64, 64) //txrImg.Bounds().Dx(), txrImg.Bounds().Dy())
 	txr.Bind()
 	txr.Image2D(txrImg)
+	//txr.Clear(255, 0, 0, 255)
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
 
 	attrPos := program.GetAttributeLocation("pos")
-	attrPos.PointerFloat32(2, false, 4, 0)
-	attrPos.Enable()
+	vao.AttribFormat32(attrPos, 2, 0)
+	vao.AttribBinding(bindPos, attrPos)
 
 	attrUV := program.GetAttributeLocation("uv")
-	attrUV.PointerFloat32(2, false, 4, 2)
-	attrUV.Enable()
+	vao.AttribFormat32(attrUV, 2, 2)
+	vao.AttribBinding(bindPos, attrUV)
+
+	vao.EnableAttrib(attrPos)
+	vao.EnableAttrib(attrUV)
+
+	vao.Bind()
 
 	for !win.ShouldClose() {
+		gl.ClearBufferfv(gl.COLOR, 0, &bgCol[0])
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		program.Use()
-		vao.Bind()
 		gl.DrawArrays(gl.TRIANGLES, 0, 3)
 		win.SwapBuffers()
 		glad.PollEvents()
@@ -92,7 +98,7 @@ out vec2 vUV;
 void main() { gl_Position = vec4(pos, 0.0, 1.0); vUV = uv; }`
 	fragmentShaderSource = `#version 440 core
 in vec2 vUV;
-out vec3 color;
+out vec4 color;
 uniform sampler2D sampler;
-void main() { color = texture(sampler, vUV).rgb; }`
+void main() { color = vec4(0.1, 0.1, 0.1, 1.0) + texture(sampler, vUV); }`
 )

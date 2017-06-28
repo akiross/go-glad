@@ -3,7 +3,7 @@ package goglad
 import (
 	"log"
 
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type Program uint32
@@ -52,10 +52,21 @@ func (pr Program) GetInfoLog() string {
 	return infoLog
 }
 
+// Call this before linking to set location of attributes
+func (pr Program) BindAttributeLocation(index uint32, name string) {
+	cname := gl.Str(name + "\x00")
+	gl.BindAttribLocation(uint32(pr), index, cname)
+}
+
+// Call this after linking to get location of attributes (e.g. if they were not set)
 func (pr Program) GetAttributeLocation(name string) VertexAttrib {
 	return VertexAttrib(gl.GetAttribLocation(uint32(pr), gl.Str(name+"\x00")))
 }
 
 func (pr Program) Use() {
 	gl.UseProgram(uint32(pr))
+}
+
+func (pr Program) Delete() {
+	gl.DeleteProgram(uint32(pr))
 }

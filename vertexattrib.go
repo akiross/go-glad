@@ -1,7 +1,7 @@
 package goglad
 
 import (
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type VertexAttrib uint32
@@ -14,6 +14,7 @@ func (va VertexAttrib) Disable() {
 	gl.DisableVertexAttribArray(uint32(va))
 }
 
+/*
 // size: number of components per vertex (e.g. 3D vertices -> 3)
 // dataType: gl.FLOAT, etc
 // normalized: define if data have to be normalized
@@ -32,3 +33,4 @@ func (va VertexAttrib) PointerFloat32(size int32, normalize bool, stride, offset
 func (va VertexAttrib) PointerFloat64(size int32, normalize bool, stride, offset int32) {
 	gl.VertexAttribPointer(uint32(va), size, gl.DOUBLE, normalize, stride*8, gl.PtrOffset(int(offset)*8))
 }
+*/

@@ -35,6 +35,17 @@ func BlockEnable(objs ...Enabler) func() {
 	}
 }
 
+// Create
+func MakeProgram(shaders ...Shader) Program {
+	program := NewProgram()
+	program.AttachShaders(shaders...)
+	program.Link()
+	for i := range shaders {
+		shaders[i].Delete()
+	}
+	return program
+}
+
 // TODO We could create a tool that allows to easily specify data and attributes in the same place
 // that would replace defining the data and binding it to attributes: it would understand automatically
 // the size of data, location in the array (offset, stride, type)

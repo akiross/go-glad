@@ -1,6 +1,6 @@
 package goglad
 
-import "github.com/go-gl/gl/v4.4-core/gl"
+import "github.com/go-gl/gl/v4.5-core/gl"
 
 // Renderbuffer is, similarly to a texture, a destination when rendering in a FBO.
 // RB cannot be used as textures, therefore OpenGL implementation might be optimized.
