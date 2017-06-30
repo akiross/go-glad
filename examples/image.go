@@ -1,10 +1,10 @@
 package main
 
-// Hello world in OpenGL: create a triangle on screen
+// Example of loading an image and using it as a texture
 
 import (
 	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.4-core/gl"
+	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"image"
 	_ "image/png"
@@ -26,7 +26,7 @@ func main() {
 
 	log.Println("Starting")
 
-	win := glad.NewOGLWindow(800, 600, "Gex",
+	win := glad.NewOGLWindow(800, 600, "Texture image",
 		glad.CoreProfile(true),
 		glad.Resizable(false),
 		glad.ContextVersion(4, 4),
@@ -77,26 +77,30 @@ func main() {
 	}
 
 	// Create a VAO and VBO for quad (Texture)
+	bindPos := uint32(0)
 	vao = glad.NewVertexArrayObject()
-	vao.Bind()
 	vbo = glad.NewVertexBufferObject()
-	vbo.Bind()
 	vbo.BufferData32(quad, gl.STATIC_DRAW)
+	vao.VertexBuffer32(bindPos, vbo, 0, 4)
+
 	// Define attributes to draw the texture on quad
 	attrPos = program.GetAttributeLocation("pos")
-	attrPos.PointerFloat32(2, false, 4, 0)
-	attrUV = program.GetAttributeLocation("uv")
-	attrUV.PointerFloat32(2, false, 4, 2)
+	vao.AttribFormat32(attrPos, 2, 0)
+	vao.AttribBinding(bindPos, attrPos)
 
-	// Create a framebuffer and a texture as render target
+	attrUV = program.GetAttributeLocation("uv")
+	vao.AttribFormat32(attrUV, 2, 2)
+	vao.AttribBinding(bindPos, attrUV)
+
+	// Create a texture as render target
 	txr = glad.NewTexture()
-	txr.Bind()
+	txr.Storage2D(img.Bounds().Dx(), img.Bounds().Dy())
 	txr.Image2D(img)
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
-	// Attach texture to target
-	//fbo.Texture(gl.COLOR_ATTACHMENT0, txr)
 
 	gl.ClearColor(0.3, 0.3, 0.3, 1.0)
+	txr.Bind()
+	vao.Bind()
 	program.Use()
 	attrPos.Enable()
 	attrUV.Enable()

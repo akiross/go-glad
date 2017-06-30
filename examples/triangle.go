@@ -14,7 +14,7 @@ func main() {
 
 	log.Println("Starting")
 
-	win := glad.NewOGLWindow(800, 600, "Gex",
+	win := glad.NewOGLWindow(800, 600, "Hello Triangle",
 		glad.CoreProfile(true),
 		glad.Resizable(false),
 		glad.ContextVersion(4, 5),

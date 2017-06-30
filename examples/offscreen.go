@@ -1,6 +1,6 @@
 package main
 
-// Hello world in OpenGL: create a triangle on screen
+// Example of using framebuffers to draw offscreen and re-use it as a texture
 
 import (
 	glad "github.com/akiross/go-glad"
@@ -29,7 +29,7 @@ func main() {
 
 	log.Println("Starting")
 
-	win := glad.NewOGLWindow(800, 600, "Gex",
+	win := glad.NewOGLWindow(800, 600, "Offscreen",
 		glad.CoreProfile(true),
 		glad.Resizable(false),
 		glad.ContextVersion(4, 4),
