@@ -161,8 +161,8 @@ func main() {
 	vaoT.Bind()
 	//txr.Bind()
 	programTxr.Use()
-	attrPosT.Enable()
-	attrUV.Enable()
+	vaoT.EnableAttrib(attrPosT)
+	vaoT.EnableAttrib(attrUV)
 
 	for !win.ShouldClose() {
 		// Draw triangles with texture

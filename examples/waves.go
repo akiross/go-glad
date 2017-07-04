@@ -17,6 +17,8 @@ const (
 	WIDTH  = 128
 	HEIGHT = 128
 	DAMP   = 0.95
+
+	SIDE = 512
 )
 
 type Grid struct {
@@ -29,9 +31,11 @@ type Grid struct {
 func NewGrid(w, h int) *Grid {
 	g := Grid{w: w, h: h}
 	g.materials = make([]int, w*h)
-	g.grids = make([][]float32, 2)
+	g.grids = make([][]float32, 4)
 	g.grids[0] = make([]float32, w*h)
 	g.grids[1] = make([]float32, w*h)
+	g.grids[2] = make([]float32, w*h)
+	g.grids[3] = make([]float32, w*h)
 
 	for i := 0; i < w; i++ {
 		g.materials[i] = 1
@@ -50,34 +54,46 @@ func NewGrid(w, h int) *Grid {
 }
 
 func (g *Grid) Get(x, y int) float32 {
-	return g.grids[0][y*g.w+x]
+	return g.grids[1][y*g.w+x]
 }
 
 func (g *Grid) Set(x, y int, v float32) {
-	g.grids[0][y*g.w+x] = v
+	g.grids[1][y*g.w+x] = v
 }
 
 func (g *Grid) Update(damp float32) {
-	cgrid := g.grids[0] // Current grid
-	pgrid := g.grids[1] // Previous grid
+	/*
+		var dt float32 = 0.5 // Integration time step
+		k := damp            // Spring constant
+
+		F := func(t, x, y int) float32 {
+			return g.grids[1-t][y*g.w+x]
+		}
+	*/
 	for y := 1; y < g.h-1; y++ {
 		for x := 1; x < g.w-1; x++ {
-			switch g.materials[y*g.w+x] {
-			case 0:
+			if g.materials[y*g.w+x] == 0 {
 				var (
-					old    = pgrid[y*g.w+x]
-					left   = cgrid[y*g.w+x-1]
-					right  = cgrid[y*g.w+x+1]
-					top    = cgrid[(y+1)*g.w+x]
-					bottom = cgrid[(y-1)*g.w+x]
+					old    = g.grids[0][y*g.w+x]
+					left   = g.grids[1][y*g.w+x-1]
+					right  = g.grids[1][y*g.w+x+1]
+					top    = g.grids[1][(y+1)*g.w+x]
+					bottom = g.grids[1][(y-1)*g.w+x]
 				)
-				pgrid[y*g.w+x] = damp * ((left+right+top+bottom)*0.5 - old)
-			case 1:
+				g.grids[0][y*g.w+x] = damp * ((left+right+top+bottom)*0.5 - old)
+
+				/*
+					x_c := F(0, x, y) + (F(0, x, y)-F(-1, x, y))*dt + k*(F(-2, x-1, y)-F(-2, x, y))*dt*dt + k*(F(-2, x+1, y)-F(-2, x, y))*dt*dt
+					y_c := F(0, x, y) + (F(0, x, y)-F(-1, x, y))*dt + k*(F(-2, x, y-1)-F(-2, x, y))*dt*dt + k*(F(-2, x, y+1)-F(-2, x, y))*dt*dt
+
+					g.grids[0][y*g.w+x] = 0.5 * (x_c + y_c)
+				*/
 			}
 		}
 	}
 
 	g.grids[0], g.grids[1] = g.grids[1], g.grids[0]
+	//g.grids[0], g.grids[1], g.grids[2], g.grids[3] = g.grids[3], g.grids[0], g.grids[1], g.grids[2]
 }
 
 // When clicked on window, set a value on the grid
@@ -98,7 +114,7 @@ func main() {
 
 	log.Println("Starting")
 
-	win := glad.NewOGLWindow(512, 512, "Waves",
+	win := glad.NewOGLWindow(SIDE, SIDE, "Waves",
 		glad.CoreProfile(true),
 		glad.Resizable(false),
 		glad.ContextVersion(4, 4),
