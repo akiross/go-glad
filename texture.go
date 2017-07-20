@@ -29,8 +29,14 @@ func (tex Texture) Storage2D(w, h int) {
 
 // Copy image into pre-allocated texture (call Storage2D before this)
 func (tex Texture) Image2D(img image.Image) {
-	// Copy image to RGBA format
-	rgba := image.NewRGBA(img.Bounds())
+	// Copy image to RGBA format, if necessary
+	var rgba *image.RGBA
+	switch img.(type) {
+	case *image.RGBA:
+		rgba = img.(*image.RGBA)
+	default:
+		rgba = image.NewRGBA(img.Bounds())
+	}
 	// Get image dimension
 	w, h := rgba.Rect.Size().X, rgba.Rect.Size().Y
 	// Check if stride is fine

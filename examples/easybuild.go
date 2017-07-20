@@ -79,8 +79,9 @@ func main() {
 		ClearColor: []float32{0.6, 0.6, 0.6, 1.0},
 	})
 
+	autoTri.AutoDraw()
+
 	for !win.ShouldClose() {
-		autoTri.AutoDraw()
 		autoScr.AutoDraw()
 		win.SwapBuffers()
 		glad.PollEvents()

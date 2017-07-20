@@ -239,3 +239,8 @@ func (mo *AutoConfig) AutoDraw() {
 		mo.FBO.Unbind()
 	}
 }
+
+// Reload the data of the i-th image into i-th texture
+func (mo *AutoConfig) UpdateImage(i int) {
+	mo.Textures[i].Image2D(mo.Cfg.Images[i])
+}
