@@ -1,11 +1,20 @@
-package goglad
+// Package glad allows to use OpenGL in Go
+// It uses DSA-style OpenGL, to make it easier to learn and understand
+// https://www.khronos.org/opengl/wiki/Direct_State_Access
+package glad
 
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
+// VertexArrayObject represents the vertex attribute state
+// In the core profile, a VAO is mandatory
+// VAOs have "attribute lists", where you can store data about your mesh
+// each attribute you might store vertex positions, colors, normals, texture coords, etc
+// The data themselves are stored as VBOs (plain data)
 type VertexArrayObject uint32
 
+// NewVertexArrayObject allocates the name for a VAO
 func NewVertexArrayObject() VertexArrayObject {
 	var vao uint32
 	gl.CreateVertexArrays(1, &vao)

@@ -1,4 +1,4 @@
-package goglad
+package glad
 
 import (
 	"log"
@@ -82,7 +82,9 @@ func NewOGLWindow(width, height int, title string, opts ...WinOption) *glfw.Wind
 }
 
 var (
-	Terminate    = glfw.Terminate
-	PollEvents   = glfw.PollEvents
-	SwapInterval = glfw.SwapInterval
+	Terminate         = glfw.Terminate
+	PollEvents        = glfw.PollEvents
+	WaitEvents        = glfw.WaitEvents
+	WaitEventsTimeout = glfw.WaitEventsTimeout
+	SwapInterval      = glfw.SwapInterval
 )

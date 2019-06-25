@@ -1,1 +1,1 @@
-package goglad
+package glad

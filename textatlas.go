@@ -1,4 +1,4 @@
-package goglad
+package glad
 
 //import "unicode/utf8"
 

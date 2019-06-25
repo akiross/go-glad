@@ -1,4 +1,4 @@
-package goglad
+package glad
 
 import (
 	"log"
@@ -6,9 +6,10 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
+// Program represents a program in the OpenGL context
 type Program uint32
 
-// Create a program, attaches shaders and link before returning
+// PrepareProgram creates a program, attaches shaders and links before returning
 func PrepareProgram(shaders ...Shader) Program {
 	pr := NewProgram()
 	pr.AttachShaders(shaders...)
@@ -16,16 +17,20 @@ func PrepareProgram(shaders ...Shader) Program {
 	return pr
 }
 
+// NewProgram creates a program with a new name
 func NewProgram() Program {
 	return Program(gl.CreateProgram())
 }
 
+// AttachShaders attaches one or more shaders to the program
 func (pr Program) AttachShaders(shaders ...Shader) {
 	for _, sh := range shaders {
 		gl.AttachShader(uint32(pr), uint32(sh))
 	}
 }
 
+// Link links the attached shaders belonging to the program
+// logging an error if link did not succeed
 func (pr Program) Link() {
 	gl.LinkProgram(uint32(pr))
 

@@ -1,4 +1,4 @@
-package goglad
+package glad
 
 import (
 	"log"
@@ -6,8 +6,11 @@ import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
+// Shader represents a shader in the OpenGL context
 type Shader uint32
 
+// NewShader compiles the shader source and returns a shader object
+// errors are logged. Source code does not need to end with \x00
 func NewShader(source string, shaderType uint32) Shader {
 	if source == "" {
 		log.Fatalln("Unable to create shader from empty string")

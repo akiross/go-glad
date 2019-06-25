@@ -1,11 +1,13 @@
-package goglad
+package glad
 
 import (
 	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
+// VertexBufferObject represents a (vertex) buffer object in OpenGL context
 type VertexBufferObject uint32
 
+// NewVertexBufferObject creates a new buffer object
 func NewVertexBufferObject() VertexBufferObject {
 	var vbo uint32
 	gl.CreateBuffers(1, &vbo)
@@ -15,18 +17,15 @@ func NewVertexBufferObject() VertexBufferObject {
 // TODO map buffer
 
 func (vbo VertexBufferObject) Delete() {
-
 }
 
-/*
-func (vbo VertexBufferObject) Bind() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, uint32(vbo))
+func (vbo VertexBufferObject) Bind(target uint32) {
+	gl.BindBuffer(target, uint32(vbo))
 }
 
-func (vbo VertexBufferObject) Unbind() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+func (vbo VertexBufferObject) Unbind(target uint32) {
+	gl.BindBuffer(target, 0)
 }
-*/
 
 func (vbo VertexBufferObject) BufferData32(data []float32, usage uint32) {
 	gl.NamedBufferData(uint32(vbo), int(len(data))*4, gl.Ptr(data), usage)
