@@ -29,11 +29,11 @@ func (vbo VertexBufferObject) Unbind() {
 */
 
 func (vbo VertexBufferObject) BufferData32(data []float32, usage uint32) {
-	gl.NamedBufferData(uint32(vbo), int32(len(data))*4, gl.Ptr(data), usage)
+	gl.NamedBufferData(uint32(vbo), int(len(data))*4, gl.Ptr(data), usage)
 }
 
 func (vbo VertexBufferObject) BufferData64(data []float64, usage uint32) {
-	gl.NamedBufferData(uint32(vbo), int32(len(data))*8, gl.Ptr(data), usage)
+	gl.NamedBufferData(uint32(vbo), int(len(data))*8, gl.Ptr(data), usage)
 }
 
 /*
@@ -47,11 +47,11 @@ func (vbo VertexBufferObject) BufferStorage64(data []float64, usage uint32) {
 */
 
 func (vbo VertexBufferObject) BufferSubData32(data []float32, offset int) {
-	gl.NamedBufferSubData(uint32(vbo), offset, int32(len(data))*4, gl.Ptr(data))
+	gl.NamedBufferSubData(uint32(vbo), offset, int(len(data))*4, gl.Ptr(data))
 }
 
 func (vbo VertexBufferObject) BufferSubData64(data []float64, offset int) {
-	gl.NamedBufferSubData(uint32(vbo), offset, int32(len(data))*8, gl.Ptr(data))
+	gl.NamedBufferSubData(uint32(vbo), offset, int(len(data))*8, gl.Ptr(data))
 }
 
 func (vbo VertexBufferObject) Clear32(data []float32) {
@@ -70,5 +70,5 @@ func (vbo VertexBufferObject) Clear32(data []float32) {
 }
 
 func (vbo VertexBufferObject) CopyTo(dest VertexBufferObject, readOffset, writeOffset int, size int32) {
-	gl.CopyNamedBufferSubData(uint32(vbo), uint32(dest), readOffset, writeOffset, size)
+	gl.CopyNamedBufferSubData(uint32(vbo), uint32(dest), readOffset, writeOffset, int(size))
 }
