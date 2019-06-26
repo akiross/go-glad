@@ -3,23 +3,15 @@ package main
 // Example of loading an image and using it as a texture
 
 import (
-	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.5-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
 	"image"
 	_ "image/png"
 	"log"
 	"os"
 	"runtime"
+
+	glad "github.com/akiross/go-glad"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
-
-var nextFrame = false
-
-func advanceFrame(w *glfw.Window, key glfw.Key, sc int, act glfw.Action, md glfw.ModifierKey) {
-	if act == glfw.Press && key == glfw.KeySpace {
-		nextFrame = true
-	}
-}
 
 func main() {
 	runtime.LockOSThread()
@@ -35,7 +27,6 @@ func main() {
 	defer glad.Terminate()
 	// Enable VSync
 	glad.SwapInterval(1)
-	win.SetKeyCallback(advanceFrame)
 
 	var (
 		program    glad.Program
@@ -93,13 +84,13 @@ func main() {
 	vao.AttribBinding(bindPos, attrUV)
 
 	// Create a texture as render target
-	txr = glad.NewTexture()
-	txr.Storage2D(img.Bounds().Dx(), img.Bounds().Dy())
+	txr = glad.NewTexture(gl.TEXTURE_2D)
+	txr.Storage(1, gl.RGBA8, []int{img.Bounds().Dx(), img.Bounds().Dy()})
 	txr.Image2D(img)
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
 
 	gl.ClearColor(0.3, 0.3, 0.3, 1.0)
-	txr.Bind()
+	txr.Bind(0)
 	vao.Bind()
 	program.Use()
 	vao.EnableAttrib(attrPos)

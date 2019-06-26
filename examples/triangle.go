@@ -3,10 +3,11 @@ package main
 // Hello world in OpenGL: create a triangle on screen
 
 import (
-	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.5-core/gl"
 	"log"
 	"runtime"
+
+	glad "github.com/akiross/go-glad"
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 func main() {
@@ -24,7 +25,18 @@ func main() {
 	// Enable VSync
 	glad.SwapInterval(1)
 
-	var bgCol = []float32{0.3, 0.3, 0.3, 1.0}
+	var (
+		bgCol              = []float32{0.3, 0.3, 0.3, 1.0}
+		vertexShaderSource = `#version 450 core
+	in vec2 pos;
+	in vec3 col;
+	out vec3 vCol;
+	void main() { gl_Position = vec4(pos, 0.0, 1.0); vCol = col; }`
+		fragmentShaderSource = `#version 450 core
+	in vec3 vCol;
+	out vec3 color;
+	void main() { color = vCol; }`
+	)
 
 	vertShader := glad.NewShader(vertexShaderSource, gl.VERTEX_SHADER)
 	fragShader := glad.NewShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
@@ -61,25 +73,13 @@ func main() {
 	vao.AttribBinding(bindPos, attrCol)            // Bind attribute to position 1
 	vao.EnableAttrib(attrCol)
 
+	program.Use()
 	vao.Bind()
 
 	for !win.ShouldClose() {
 		gl.ClearBufferfv(gl.COLOR, 0, &bgCol[0])
-		program.Use()
 		gl.DrawArrays(gl.TRIANGLES, 0, 3)
 		win.SwapBuffers()
 		glad.PollEvents()
 	}
 }
-
-var (
-	vertexShaderSource = `#version 440 core
-in vec2 pos;
-in vec3 col;
-out vec3 vCol;
-void main() { gl_Position = vec4(pos, 0.0, 1.0); vCol = col; }`
-	fragmentShaderSource = `#version 440 core
-in vec3 vCol;
-out vec3 color;
-void main() { color = vCol; }`
-)

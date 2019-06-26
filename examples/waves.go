@@ -4,13 +4,14 @@ package main
 // https://www.thanassis.space/wavePhysics.html
 
 import (
-	glad "github.com/akiross/go-glad"
-	"github.com/go-gl/gl/v4.5-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
 	"image"
 	"image/color"
 	"log"
 	"runtime"
+
+	glad "github.com/akiross/go-glad"
+	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 const (
@@ -182,9 +183,9 @@ func main() {
 	vbo.BufferData32(vertPosAndUV, gl.STATIC_DRAW)
 	vao.VertexBuffer32(bindPos, vbo, 0, 4)
 
-	txr := glad.NewTexture()
-	txr.Storage2D(WIDTH, HEIGHT)
-	txr.Bind()
+	txr := glad.NewTexture(gl.TEXTURE_2D)
+	txr.Storage(1, gl.RGBA8, []int{WIDTH, HEIGHT})
+	txr.Bind(0)
 	txr.Image2D(txrImg)
 	//txr.Clear(255, 0, 0, 255)
 	txr.SetFilters(gl.NEAREST, gl.NEAREST)
@@ -209,7 +210,7 @@ func main() {
 		program.Use()
 		gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 4)
 
-		i += 1
+		i++
 		grid.Update(DAMP)
 		updateColors(grid, i)
 		txr.Image2D(txrImg)

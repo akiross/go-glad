@@ -1,9 +1,11 @@
 package glad
 
 import (
-	"github.com/go-gl/gl/v4.5-core/gl"
 	"image"
+	"log"
 	"unsafe"
+
+	"github.com/go-gl/gl/v4.5-core/gl"
 )
 
 type Binder interface {
@@ -52,6 +54,16 @@ func MakeProgram(shaders ...Shader) Program {
 	return program
 }
 
+// CheckError checks for OpenGL errors and print them if any
+// Returns true if any error was found
+func CheckError() bool {
+	if err := gl.GetError(); err != gl.NO_ERROR {
+		log.Println("GL ERROR:", err)
+		return true
+	}
+	return false
+}
+
 // TODO We could create a tool that allows to easily specify data and attributes in the same place
 // that would replace defining the data and binding it to attributes: it would understand automatically
 // the size of data, location in the array (offset, stride, type)
@@ -61,18 +73,21 @@ func MakeProgram(shaders ...Shader) Program {
 	DefineMesh(Attr("pos", 2), Attr("col", 3), Attr("uv", 2), data)
 */
 
+// Attr describes an attribute
 type Attr struct {
-	Buff int // Which of the Data buffers will be used
-	Name string
-	Size int32
+	Buff int    // Which of the Data buffers will be used
+	Name string // Name of the attribute in the shader
+	Size int32  // Number of elements for this attribute
 }
 
-type TxrSpec struct {
-	Width, Height int        // Empty image of given size
-	Path          string     // Load texture from file
-	Image         image.RGBA // Load texture from data
-}
+// TxrSpec describes a texture to be loaded
+// type TxrSpec struct {
+// 	Width, Height int        // Empty image of given size
+// 	Path          string     // Load texture from file
+// 	Image         image.RGBA // Load texture from data
+// }
 
+// Rect describes a rectangle with integer coordinates
 type Rect struct {
 	X, Y, W, H int
 }
@@ -118,8 +133,8 @@ func AutoBuild(cfg *Config) *AutoConfig {
 
 	if cfg.Offscreen != nil {
 		mo.FBO = NewFramebuffer()
-		mo.BgTxr = NewTexture()
-		mo.BgTxr.Storage2D(cfg.Offscreen.W, cfg.Offscreen.H)
+		mo.BgTxr = NewTexture(gl.TEXTURE_2D)
+		mo.BgTxr.Storage(1, gl.RGBA8, []int{cfg.Offscreen.W, cfg.Offscreen.H})
 		mo.BgTxr.SetFilters(gl.NEAREST, gl.NEAREST) // FIXME use a setting
 		mo.FBO.Texture(gl.COLOR_ATTACHMENT0, mo.BgTxr)
 	}
@@ -128,22 +143,22 @@ func AutoBuild(cfg *Config) *AutoConfig {
 		cfg.ClearColor = []float32{0.0, 0.0, 0.0, 1.0}
 	}
 
-	mo.VAO = NewVertexArrayObject()
 	mo.VBOs = make([]VertexBufferObject, len(cfg.Data))
 	for i := range cfg.Data {
 		mo.VBOs[i] = NewVertexBufferObject()
 		mo.VBOs[i].BufferData32(cfg.Data[i], cfg.DataUsages[i])
 	}
 
-	// Prepare attributes
+	mo.VAO = NewVertexArrayObject()
 	var offsets = make([]uint32, len(cfg.Data))
+	// Prepare attributes
 	for i := range cfg.Attributes {
 		b := cfg.Attributes[i].Buff
 		// Get attribute by name
 		at := mo.Prog.GetAttributeLocation(cfg.Attributes[i].Name)
 		// Specify format for attrib
 		mo.VAO.AttribFormat32(at, cfg.Attributes[i].Size, offsets[b])
-		// Next attribute starts where this ends
+		// Next attribute starts where this ends: build relative offset
 		offsets[b] += uint32(cfg.Attributes[i].Size)
 		// Set binding
 		mo.VAO.AttribBinding(uint32(b), at)
@@ -151,7 +166,7 @@ func AutoBuild(cfg *Config) *AutoConfig {
 		mo.VAO.EnableAttrib(at)
 	}
 
-	// Set VBO specifiying the total stride (= offset)
+	// Set VBO specifiying the total stride (= sum of relative offsets)
 	for i := range cfg.Data {
 		mo.VAO.VertexBuffer32(uint32(i), mo.VBOs[i], 0, int32(offsets[i]))
 	}
@@ -179,14 +194,13 @@ func AutoBuild(cfg *Config) *AutoConfig {
 		}
 	}
 
+	// Load images as textures
 	if cfg.Images != nil {
 		mo.Textures = make([]Texture, len(cfg.Images))
 	}
-
-	// Load images as textures
 	for i := range cfg.Images {
-		txr := NewTexture()
-		txr.Storage2D(cfg.Images[i].Bounds().Dx(), cfg.Images[i].Bounds().Dy())
+		txr := NewTexture(gl.TEXTURE_2D)
+		txr.Storage(1, gl.RGBA8, []int{cfg.Images[i].Bounds().Dx(), cfg.Images[i].Bounds().Dy()})
 		txr.Image2D(cfg.Images[i])
 		txr.SetFilters(gl.NEAREST, gl.NEAREST)
 		mo.Textures[i] = txr
@@ -196,9 +210,11 @@ func AutoBuild(cfg *Config) *AutoConfig {
 }
 
 func (mo *AutoConfig) AutoDraw() {
+	var bindUnit uint32
 	if mo.Cfg.Offscreen != nil {
 		mo.FBO.Bind()
-		mo.BgTxr.Bind()
+		mo.BgTxr.Bind(bindUnit)
+		bindUnit++
 		gl.Viewport(
 			int32(mo.Cfg.Offscreen.X),
 			int32(mo.Cfg.Offscreen.Y),
@@ -209,12 +225,15 @@ func (mo *AutoConfig) AutoDraw() {
 		gl.ClearNamedFramebufferfv(0, gl.COLOR, 0, &mo.Cfg.ClearColor[0])
 	}
 
+	// Bind pre-allocated textures
 	for i := range mo.Cfg.Textures {
-		mo.Cfg.Textures[i].Bind()
+		mo.Cfg.Textures[i].Bind(bindUnit) // FIXME how does the shader know what is the texture to use?
+		bindUnit++
 	}
-
+	// Bind image-loaded textures
 	for i := range mo.Textures {
-		mo.Textures[i].Bind()
+		mo.Textures[i].Bind(bindUnit)
+		bindUnit++
 	}
 
 	mo.Prog.Use()
@@ -227,20 +246,22 @@ func (mo *AutoConfig) AutoDraw() {
 	mo.VAO.Unbind()
 
 	for i := range mo.Textures {
-		mo.Textures[i].Unbind()
+		bindUnit--
+		mo.Textures[i].Unbind(bindUnit)
 	}
 
 	for i := range mo.Cfg.Textures {
-		mo.Cfg.Textures[i].Unbind()
+		bindUnit--
+		mo.Cfg.Textures[i].Unbind(bindUnit)
 	}
-
+	bindUnit--
 	if mo.Cfg.Offscreen != nil {
-		mo.BgTxr.Unbind()
+		mo.BgTxr.Unbind(bindUnit)
 		mo.FBO.Unbind()
 	}
 }
 
-// Reload the data of the i-th image into i-th texture
+// UpdateImage reloads the data of the i-th image into i-th texture
 func (mo *AutoConfig) UpdateImage(i int) {
 	mo.Textures[i].Image2D(mo.Cfg.Images[i])
 }
